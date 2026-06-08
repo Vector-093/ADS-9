@@ -4,38 +4,38 @@
 
 #include <vector>
 
-struct PermNode {
-  char symbol;
-  std::vector<PermNode*> kids;
-  size_t subtreeCount;
+struct Node {
+  char label;
+  std::vector<Node*> branches;
+  size_t treeSize;
 
-  explicit PermNode(char v);
-  ~PermNode();
+  explicit Node(char v);
+  ~Node();
 };
 
-class PermutationTree {
+class PMTree {
  public:
-  explicit PermutationTree(const std::vector<char>& symbols);
+  explicit PMTree(const std::vector<char>& symbols);
 
-  PermutationTree(const PermutationTree&) = delete;
-  PermutationTree& operator=(const PermutationTree&) = delete;
+  PMTree(const PMTree&) = delete;
+  PMTree& operator=(const PMTree&) = delete;
 
-  ~PermutationTree();
+  ~PMTree();
 
-  std::vector<std::vector<char>> allPermutations() const;
+  std::vector<std::vector<char>> getAllPerms() const;
 
-  PermNode* rootNode() const;
+  Node* getRoot() const;
 
  private:
-  PermNode* root;
+  Node* root_;
 
-  std::vector<PermNode*> createChildren(std::vector<char> avail);
-  void gatherPerms(PermNode* node, std::vector<char>& curr,
-                   std::vector<std::vector<char>>& out) const;
+  std::vector<Node*> buildNodes(std::vector<char> remaining);
+  void collectAll(Node* node, std::vector<char>& current,
+                  std::vector<std::vector<char>>& output) const;
 };
 
-std::vector<char> getPermSlow(PermutationTree& tree, int num);
+std::vector<char> getPerm1(PMTree& tree, int num);
 
-std::vector<char> getPermFast(PermutationTree& tree, int num);
+std::vector<char> getPerm2(PMTree& tree, int num);
 
 #endif  // INCLUDE_TREE_H_
