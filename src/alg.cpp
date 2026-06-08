@@ -3,105 +3,105 @@
 #include <vector>
 #include "tree.h"
 
-PermNode::PermNode(char v) : symbol(v), subtreeCount(0) {}
+Node::Node(char v) : label(v), treeSize(0) {}
 
-PermNode::~PermNode() {
-  for (PermNode* kid : kids) delete kid;
+Node::~Node() {
+  for (Node* child : branches) delete child;
 }
 
-PermutationTree::PermutationTree(const std::vector<char>& symbols) {
-  std::vector<char> sortedSyms = symbols;
-  std::sort(sortedSyms.begin(), sortedSyms.end());
-  root = new PermNode('\0');
-  root->kids = createChildren(sortedSyms);
-  root->subtreeCount = 0;
-  for (PermNode* kid : root->kids) {
-    root->subtreeCount += kid->subtreeCount;
+PMTree::PMTree(const std::vector<char>& symbols) {
+  std::vector<char> sorted = symbols;
+  std::sort(sorted.begin(), sorted.end());
+  root_ = new Node('\0');
+  root_->branches = buildNodes(sorted);
+  root_->treeSize = 0;
+  for (Node* child : root_->branches) {
+    root_->treeSize += child->treeSize;
   }
 }
 
-PermutationTree::~PermutationTree() {
-  delete root;
+PMTree::~PMTree() {
+  delete root_;
 }
 
-PermNode* PermutationTree::rootNode() const {
-  return root;
+Node* PMTree::getRoot() const {
+  return root_;
 }
 
-std::vector<PermNode*> PermutationTree::createChildren(
-std::vector<char> avail) {
-  std::vector<PermNode*> result;
-  if (avail.empty()) return result;
+std::vector<Node*> PMTree::buildNodes(
+std::vector<char> remaining) {
+  std::vector<Node*> nodes;
+  if (remaining.empty()) return nodes;
 
-  for (size_t idx = 0; idx < avail.size(); ++idx) {
-    char sym = avail[idx];
-    PermNode* node = new PermNode(sym);
+  for (size_t i = 0; i < remaining.size(); ++i) {
+    char c = remaining[i];
+    Node* node = new Node(c);
 
-    std::vector<char> remaining;
-    remaining.reserve(avail.size() - 1);
-    for (size_t j = 0; j < avail.size(); ++j) {
-      if (j != idx) remaining.push_back(avail[j]);
+    std::vector<char> nextRemaining;
+    nextRemaining.reserve(remaining.size() - 1);
+    for (size_t j = 0; j < remaining.size(); ++j) {
+      if (j != i) nextRemaining.push_back(remaining[j]);
     }
 
-    node->kids = createChildren(remaining);
+    node->branches = buildNodes(nextRemaining);
 
-    if (node->kids.empty()) {
-      node->subtreeCount = 1;
+    if (node->branches.empty()) {
+      node->treeSize = 1;
     } else {
-      node->subtreeCount = 0;
-      for (PermNode* kid : node->kids) {
-        node->subtreeCount += kid->subtreeCount;
+      node->treeSize = 0;
+      for (Node* child : node->branches) {
+        node->treeSize += child->treeSize;
       }
     }
-    result.push_back(node);
+    nodes.push_back(node);
   }
+  return nodes;
+}
+
+void PMTree::collectAll(Node* node, std::vector<char>& current,
+                        std::vector<std::vector<char>>& output) const {
+  if (node->branches.empty()) {
+    output.push_back(current);
+    return;
+  }
+  for (Node* child : node->branches) {
+    current.push_back(child->label);
+    collectAll(child, current, output);
+    current.pop_back();
+  }
+}
+
+std::vector<std::vector<char>> PMTree::getAllPerms() const {
+  std::vector<std::vector<char>> result;
+  std::vector<char> path;
+  collectAll(root_, path, result);
   return result;
 }
 
-void PermutationTree::gatherPerms(PermNode* node, std::vector<char>& curr,
-                                  std::vector<std::vector<char>>& out) const {
-  if (node->kids.empty()) {
-    out.push_back(curr);
-    return;
-  }
-  for (PermNode* kid : node->kids) {
-    curr.push_back(kid->symbol);
-    gatherPerms(kid, curr, out);
-    curr.pop_back();
-  }
+std::vector<char> getPerm1(PMTree& tree, int num) {
+  if (num <= 0) return {};
+  auto all = tree.getAllPerms();
+  if (static_cast<size_t>(num) > all.size()) return {};
+  return all[num - 1];
 }
 
-std::vector<std::vector<char>> PermutationTree::allPermutations() const {
-  std::vector<std::vector<char>> output;
-  std::vector<char> currentSeq;
-  gatherPerms(root, currentSeq, output);
-  return output;
-}
-
-std::vector<char> getPermSlow(PermutationTree& tree, int n) {
-  if (n <= 0) return {};
-  auto all = tree.allPermutations();
-  if (static_cast<size_t>(n) > all.size()) return {};
-  return all[n - 1];
-}
-
-std::vector<char> getPermFast(PermutationTree& tree, int n) {
-  if (n <= 0) return {};
-  PermNode* root = tree.rootNode();
-  if (static_cast<size_t>(n) > root->subtreeCount) return {};
+std::vector<char> getPerm2(PMTree& tree, int num) {
+  if (num <= 0) return {};
+  Node* root = tree.getRoot();
+  if (static_cast<size_t>(num) > root->treeSize) return {};
 
   std::vector<char> seq;
-  PermNode* cur = root;
-  int left = n;
+  Node* cur = root;
+  int left = num;
 
-  while (!cur->kids.empty()) {
-    for (PermNode* kid : cur->kids) {
-      if (kid->subtreeCount >= static_cast<size_t>(left)) {
-        seq.push_back(kid->symbol);
-        cur = kid;
+  while (!cur->branches.empty()) {
+    for (Node* child : cur->branches) {
+      if (child->treeSize >= static_cast<size_t>(left)) {
+        seq.push_back(child->label);
+        cur = child;
         break;
       } else {
-        left -= static_cast<int>(kid->subtreeCount);
+        left -= static_cast<int>(child->treeSize);
       }
     }
   }
