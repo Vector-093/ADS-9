@@ -41,10 +41,10 @@ void demoPerms() {
   }
   std::cout << std::endl;
 
-  PermutationTree ptree(input1);
+  PMTree ptree(input1);
 
-  std::cout << "\n--- allPermutations() ---" << std::endl;
-  auto allPerms = ptree.allPermutations();
+  std::cout << "\n--- getAllPerms() ---" << std::endl;
+  auto allPerms = ptree.getAllPerms();
   std::cout << "Всего перестановок: " << allPerms.size() << std::endl;
   std::cout << "Перестановки:" << std::endl;
   for (size_t i = 0; i < allPerms.size(); ++i) {
@@ -52,38 +52,38 @@ void demoPerms() {
     displayPerm(allPerms[i]);
   }
 
-  std::cout << "\n--- getPermSlow() и getPermFast() ---" << std::endl;
+  std::cout << "\n--- getPerm1() и getPerm2() ---" << std::endl;
 
-  std::cout << "Перестановка №1 (getPermSlow): ";
-  auto p1 = getPermSlow(ptree, 1);
+  std::cout << "Перестановка №1 (getPerm1): ";
+  auto p1 = getPerm1(ptree, 1);
   displayPerm(p1);
 
-  std::cout << "Перестановка №2 (getPermFast): ";
-  auto p2 = getPermFast(ptree, 2);
+  std::cout << "Перестановка №2 (getPerm2): ";
+  auto p2 = getPerm2(ptree, 2);
   displayPerm(p2);
 
-  std::cout << "Перестановка №3 (getPermSlow): ";
-  auto p3 = getPermSlow(ptree, 3);
+  std::cout << "Перестановка №3 (getPerm1): ";
+  auto p3 = getPerm1(ptree, 3);
   displayPerm(p3);
 
-  std::cout << "Перестановка №6 (getPermFast): ";
-  auto p6 = getPermFast(ptree, 6);
+  std::cout << "Перестановка №6 (getPerm2): ";
+  auto p6 = getPerm2(ptree, 6);
   displayPerm(p6);
 
   std::cout << "\nПроверка обработки ошибок:" << std::endl;
   std::cout << "Перестановка №10 (не существует): ";
-  auto badPerm = getPermSlow(ptree, 10);
+  auto badPerm = getPerm1(ptree, 10);
   if (badPerm.empty()) {
     std::cout << "вернут пустой вектор (корректно)" << std::endl;
   }
 
   std::cout << "\n--- Пример с 4 символами (1,3,5,7) ---" << std::endl;
   std::vector<char> input2 = {'1', '3', '5', '7'};
-  PermutationTree ptree2(input2);
+  PMTree ptree2(input2);
 
   std::cout << "Первые 5 перестановок:" << std::endl;
   for (int idx = 1; idx <= 5; ++idx) {
-    auto perm = getPermFast(ptree2, idx);
+    auto perm = getPerm2(ptree2, idx);
     std::cout << idx << ": ";
     displayPerm(perm);
   }
@@ -110,9 +110,9 @@ void runExp() {
 
   std::cout << std::setw(5) << "n"
             << std::setw(15) << "n!"
-            << std::setw(20) << "allPerms(ms)"
-            << std::setw(20) << "getPermSlow(ms)"
-            << std::setw(20) << "getPermFast(ms)"
+            << std::setw(20) << "getAllPerms(ms)"
+            << std::setw(20) << "getPerm1(ms)"
+            << std::setw(20) << "getPerm2(ms)"
             << std::endl;
   std::cout << std::string(80, '-') << std::endl;
 
@@ -120,7 +120,7 @@ void runExp() {
     std::vector<char> syms = generateChars(n);
 
     std::cout << "n=" << n << " (построение дерева...) " << std::flush;
-    PermutationTree ptree(syms);
+    PMTree ptree(syms);
     std::cout << "готово" << std::endl;
 
     uint64_t totalPerms = factorialNum(n);
@@ -129,15 +129,15 @@ void runExp() {
     int chosenNum = static_cast<int>(dist(rng));
 
     double tAll = measureTimeMs([&]() {
-      ptree.allPermutations();
+      ptree.getAllPerms();
     });
 
     double tSlow = measureTimeMs([&]() {
-      getPermSlow(ptree, chosenNum);
+      getPerm1(ptree, chosenNum);
     });
 
     double tFast = measureTimeMs([&]() {
-      getPermFast(ptree, chosenNum);
+      getPerm2(ptree, chosenNum);
     });
 
     std::cout << std::setw(5) << n
@@ -150,13 +150,13 @@ void runExp() {
 
   std::cout << "\n========== АНАЛИЗ РЕЗУЛЬТАТОВ ==========\n" << std::endl;
   std::cout << "Наблюдения:\n";
-  std::cout << "1. allPermutations() генерирует все n! перестановок, "
+  std::cout << "1. getAllPerms() генерирует все n! перестановок, "
             << "время растет факториально\n";
-  std::cout << "2. getPermSlow() также выполняет полный перебор всех "
+  std::cout << "2. getPerm1() также выполняет полный перебор всех "
             << "перестановок, что крайне неэффективно\n";
-  std::cout << "3. getPermFast() использует навигацию по дереву и работает "
+  std::cout << "3. getPerm2() использует навигацию по дереву и работает "
             << "за O(n) независимо от n!\n";
-  std::cout << "4. При больших n разница между getPermFast и другими методами "
+  std::cout << "4. При больших n разница между getPerm2 и другими методами "
             << "составляет несколько порядков\n";
 }
 
