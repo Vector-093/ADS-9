@@ -28,7 +28,8 @@ PermNode* PermutationTree::rootNode() const {
   return root;
 }
 
-std::vector<PermNode*> PermutationTree::createChildren(std::vector<char> avail) {
+std::vector<PermNode*> PermutationTree::createChildren(
+std::vector<char> avail) {
   std::vector<PermNode*> result;
   if (avail.empty()) return result;
 
